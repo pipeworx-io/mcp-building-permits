@@ -1,0 +1,237 @@
+[
+  {
+    "name": "building_permits_county",
+    "description": "US residential building permits for a county (for Connecticut, a county or planning region), from the US Census Bureau Building Permits Survey: buildings, housing units and construction value in dollars for 1-unit, 2-unit, 3-4 unit and 5+ unit structures, estimated including imputation and reported only. Give county_fips (5 digits, e.g. \"06037\") for one county, or a state (optionally with a county name fragment) to list its counties for one period. Group on FIPS, not names. Every row carries period_type, period, file_vintage and revisions. Connecticut rows carry geography_vintage: counties and planning regions are different boundaries and are never joined.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "county_fips": {
+          "type": "string",
+          "description": "5-digit county FIPS (state + county), e.g. \"06037\" for Los Angeles County."
+        },
+        "state": {
+          "type": "string",
+          "description": "State as 2-digit FIPS, postal abbreviation or name; lists that state's counties when county_fips is omitted."
+        },
+        "name": {
+          "type": "string",
+          "description": "County name fragment to filter the state listing (e.g. \"Harris\")."
+        },
+        "period_type": {
+          "type": "string",
+          "enum": [
+            "monthly",
+            "year_to_date",
+            "annual"
+          ],
+          "description": "Which publisher file: monthly (that month only), year_to_date (January through the month, includes late reports and corrections to earlier months), annual (calendar year). Default monthly. They are never combined."
+        },
+        "period": {
+          "type": "string",
+          "description": "YYYY-MM for monthly / year_to_date, YYYY for annual. Omit for the latest loaded period."
+        },
+        "limit": {
+          "type": "number",
+          "description": "Max counties when listing a state (1-300, default 100)."
+        }
+      }
+    }
+  },
+  {
+    "name": "building_permits_place",
+    "description": "US residential building permits for a permit-issuing place (city, town, township), from the US Census Bureau Building Permits Survey. Identify a place by place_id (8 digits: 2-digit state FIPS plus the Census 6-digit place id) or by state plus a name fragment; a name matching several places returns the candidates instead of guessing. Monthly place rows carry the publisher source_code (5 = no report received, values imputed; 9 = no report and no imputation, so zeros mean unknown); annual and year_to_date rows carry months_reporting and reported_only beside the imputed estimate. Every row carries period_type, period, file_vintage and revisions.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "place_id": {
+          "type": "string",
+          "description": "8-digit place id (state FIPS + 6-digit Census place id); get it from a state + name search."
+        },
+        "state": {
+          "type": "string",
+          "description": "State as 2-digit FIPS, postal abbreviation or name (required with name)."
+        },
+        "name": {
+          "type": "string",
+          "description": "Place name fragment, e.g. \"Austin\"."
+        },
+        "period_type": {
+          "type": "string",
+          "enum": [
+            "monthly",
+            "year_to_date",
+            "annual"
+          ],
+          "description": "Which publisher file: monthly (that month only), year_to_date (January through the month, includes late reports and corrections to earlier months), annual (calendar year). Default monthly. They are never combined."
+        },
+        "period": {
+          "type": "string",
+          "description": "YYYY-MM for monthly / year_to_date, YYYY for annual. Omit for the latest loaded period."
+        },
+        "limit": {
+          "type": "number",
+          "description": "Max candidates (1-100, default 25)."
+        }
+      }
+    }
+  },
+  {
+    "name": "building_permits_state",
+    "description": "US residential building permits by state for one period, from the US Census Bureau Building Permits Survey: buildings, units and value in dollars by structure size, estimated including imputation and reported only. Omit state for all 50 states plus DC; set include_aggregates to also get the United States total, the 4 Census regions and 9 divisions (ids US, R1-R4, D1-D9). Every row carries period_type, period, file_vintage and revisions.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "type": "string",
+          "description": "State as 2-digit FIPS, postal abbreviation or name (or US for the national total). Omit for every state."
+        },
+        "include_aggregates": {
+          "type": "boolean",
+          "description": "Also return US, region and division totals (default false)."
+        },
+        "period_type": {
+          "type": "string",
+          "enum": [
+            "monthly",
+            "year_to_date",
+            "annual"
+          ],
+          "description": "Which publisher file: monthly (that month only), year_to_date (January through the month, includes late reports and corrections to earlier months), annual (calendar year). Default monthly. They are never combined."
+        },
+        "period": {
+          "type": "string",
+          "description": "YYYY-MM for monthly / year_to_date, YYYY for annual. Omit for the latest loaded period."
+        }
+      }
+    }
+  },
+  {
+    "name": "building_permits_series",
+    "description": "Time series of US residential building permits for one county, place or state from the US Census Bureau Building Permits Survey, one period_type per call (monthly, year_to_date or annual), oldest first, with optional from/to bounds. Each row carries period, file_vintage and revisions so a figure that moved after late reports is visible. Counties and states: use FIPS (county 5 digits, state 2 digits). Places: use place_id from building_permits_place. Connecticut county FIPS 09001-09015 and planning-region FIPS 09110-09190 are different geographies and are never joined: a series stops where the publisher switched. Monthly and year_to_date data start 2020-01; annual county and state 2000, annual place 2010.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": [
+            "county",
+            "place",
+            "state"
+          ],
+          "description": "Geography level."
+        },
+        "id": {
+          "type": "string",
+          "description": "county: 5-digit FIPS; place: 8-digit place_id; state: 2-digit FIPS, postal abbreviation or name (or US for the national total)."
+        },
+        "period_type": {
+          "type": "string",
+          "enum": [
+            "monthly",
+            "year_to_date",
+            "annual"
+          ],
+          "description": "Which publisher file: monthly (that month only), year_to_date (January through the month, includes late reports and corrections to earlier months), annual (calendar year). Default monthly. They are never combined."
+        },
+        "from": {
+          "type": "string",
+          "description": "First period (YYYY-MM or YYYY)."
+        },
+        "to": {
+          "type": "string",
+          "description": "Last period (YYYY-MM or YYYY)."
+        },
+        "limit": {
+          "type": "number",
+          "description": "Max rows (1-400, default 120)."
+        }
+      },
+      "required": [
+        "level",
+        "id"
+      ]
+    }
+  },
+  {
+    "name": "building_permits_movers",
+    "description": "Rank US counties or states by change in residential building permits between two periods of the SAME period_type, from the US Census Bureau Building Permits Survey. Default compares the period with the same month (or year) one year earlier, which removes seasonality. Choose metric (units, buildings or value), structure size (total, 1_unit, 2_units, 3_4_units, 5_plus_units), basis (estimated including imputation, or reported only), direction (up or down) and a minimum base so tiny counties do not dominate. Geographies present in only one of the two periods (such as Connecticut counties against planning regions) are excluded and counted, never joined.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": [
+            "county",
+            "state"
+          ],
+          "description": "Geography level to rank (default county)."
+        },
+        "period_type": {
+          "type": "string",
+          "enum": [
+            "monthly",
+            "year_to_date",
+            "annual"
+          ],
+          "description": "Which publisher file: monthly (that month only), year_to_date (January through the month, includes late reports and corrections to earlier months), annual (calendar year). Default monthly. They are never combined."
+        },
+        "period": {
+          "type": "string",
+          "description": "YYYY-MM for monthly / year_to_date, YYYY for annual. Omit for the latest loaded period."
+        },
+        "compare_to": {
+          "type": "string",
+          "description": "Comparison period, same format as period. Default: one year before period."
+        },
+        "metric": {
+          "type": "string",
+          "enum": [
+            "units",
+            "buildings",
+            "value"
+          ],
+          "description": "What to rank on (default units)."
+        },
+        "structure": {
+          "type": "string",
+          "enum": [
+            "total",
+            "1_unit",
+            "2_units",
+            "3_4_units",
+            "5_plus_units"
+          ],
+          "description": "Structure size (default total)."
+        },
+        "basis": {
+          "type": "string",
+          "enum": [
+            "estimated",
+            "reported"
+          ],
+          "description": "estimated = reported plus imputed (default); reported = respondents only."
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "up",
+            "down"
+          ],
+          "description": "up = largest increases first (default), down = largest decreases first."
+        },
+        "state": {
+          "type": "string",
+          "description": "Restrict county ranking to one state."
+        },
+        "min_base": {
+          "type": "number",
+          "description": "Minimum comparison-period value, in the metric's own unit (default 100 for units and buildings, 10,000,000 for value)."
+        },
+        "limit": {
+          "type": "number",
+          "description": "Rows to return (1-100, default 20)."
+        }
+      }
+    }
+  }
+]
